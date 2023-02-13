@@ -6,6 +6,8 @@ RSpec.describe "User Registration" do
 
     fill_in :user_name, with: 'User One'
     fill_in :user_email, with:'user1@example.com'
+    fill_in :user_password, with:'password123'
+    fill_in :user_password_confirmation, with:'password123'
     click_button 'Create New User'
 
     expect(current_path).to eq(user_path(User.last.id))
@@ -13,16 +15,42 @@ RSpec.describe "User Registration" do
   end 
 
   it 'does not create a user if email isnt unique' do 
-    User.create(name: 'User One', email: 'notunique@example.com')
+    User.create(name: 'User One', email: 'notunique@example.com', password: 'password111')
 
     visit register_path
     
     fill_in :user_name, with: 'User Two'
     fill_in :user_email, with:'notunique@example.com'
+    fill_in :user_password, with:'password123'
+    fill_in :user_password_confirmation, with:'password123'
     click_button 'Create New User'
 
     expect(current_path).to eq(register_path)
     expect(page).to have_content("Email has already been taken")
+  end
+  
+  it "does not create a user if passwords don't match" do 
+    visit register_path
     
+    fill_in :user_name, with: 'User New'
+    fill_in :user_email, with:'u2@example.com'
+    fill_in :user_password, with:'password123'
+    fill_in :user_password_confirmation, with:'password111'
+    click_button 'Create New User'
+    
+    expect(current_path).to eq(register_path)
+    expect(page).to have_content("Password confirmation doesn't match Password")
+  end
+  
+  it 'does not create a user if password is blank' do 
+    visit register_path
+  
+    fill_in :user_name, with: 'User Two'
+    fill_in :user_email, with:'unique@example.com'
+  
+    click_button 'Create New User'
+    
+    expect(current_path).to eq(register_path)
+    expect(page).to have_content("Password can't be blank")
   end
 end
